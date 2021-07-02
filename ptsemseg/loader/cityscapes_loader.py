@@ -2,7 +2,7 @@ import os
 import torch
 import numpy as np
 import scipy.misc as m
-
+from PIL import Image
 from torch.utils import data
 
 from ptsemseg.utils import recursive_glob
@@ -153,10 +153,10 @@ class cityscapesLoader(data.Dataset):
             os.path.basename(img_path)[:-15] + "gtFine_labelIds.png",
         )
 
-        img = m.imread(img_path)
+        img = Image.open(img_path)
         img = np.array(img, dtype=np.uint8)
 
-        lbl = m.imread(lbl_path)
+        lbl = Image.open(lbl_path)
         lbl = self.encode_segmap(np.array(lbl, dtype=np.uint8))
 
         if self.augmentations is not None:
@@ -173,7 +173,8 @@ class cityscapesLoader(data.Dataset):
         :param img:
         :param lbl:
         """
-        img = m.imresize(img, (self.img_size[0], self.img_size[1]))  # uint8 with RGB mode
+        img = np.array(Image.fromarray(img).resize(
+                (self.img_size[1], self.img_size[0])))  # uint8 with RGB mode
         img = img[:, :, ::-1]  # RGB -> BGR
         img = img.astype(np.float64)
         img -= self.mean
@@ -186,7 +187,8 @@ class cityscapesLoader(data.Dataset):
 
         classes = np.unique(lbl)
         lbl = lbl.astype(float)
-        lbl = m.imresize(lbl, (self.img_size[0], self.img_size[1]), "nearest", mode="F")
+        lbl = np.array(Image.fromarray(lbl).resize(
+                (self.img_size[1], self.img_size[0]), resample=Image.NEAREST))
         lbl = lbl.astype(int)
 
         if not np.all(classes == np.unique(lbl)):
