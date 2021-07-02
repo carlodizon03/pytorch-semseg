@@ -6,6 +6,7 @@ import torch
 import random
 import argparse
 import numpy as np
+import torchvision
 
 from torch.utils import data
 from tqdm import tqdm
@@ -21,6 +22,17 @@ from ptsemseg.optimizers import get_optimizer
 
 from tensorboardX import SummaryWriter
 
+def display_custom_batch(self,masks, mask_preds, epoch, images = None, unNorm = False, num_images = 4, name = 'Custom'):
+        if unNorm and images!=None:
+            images = self.unnorm(images)
+        if images != None:
+            image_grid  = torchvision.utils.make_grid(images[:num_images])
+            SummaryWriter.add_image(name + '/image',image_grid,epoch)
+        
+        mask_grid   = torchvision.utils.make_grid(masks[:num_images])
+        preds_grid = torchvision.utils.make_grid(mask_preds[:num_images])
+        SummaryWriter.add_image(name + '/mask',mask_grid,epoch)
+        SummaryWriter.add_image(name + '/prediction',preds_grid,epoch)
 
 def train(cfg, writer, logger):
 
@@ -166,6 +178,7 @@ def train(cfg, writer, logger):
                         val_loss_meter.update(val_loss.item())
 
                 writer.add_scalar("loss/val_loss", val_loss_meter.avg, i + 1)
+                display_custom_batch(labels_val,images_val,i + 1)
                 logger.info("Iter %d Loss: %.4f" % (i + 1, val_loss_meter.avg))
 
                 score, class_iou = running_metrics_val.get_scores()
