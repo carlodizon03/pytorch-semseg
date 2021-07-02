@@ -19,12 +19,13 @@ from ptsemseg.metrics import runningScore, averageMeter
 from ptsemseg.augmentations import get_composed_augmentations
 from ptsemseg.schedulers import get_scheduler
 from ptsemseg.optimizers import get_optimizer
-
+from UnNorm import UnNormalize
 from tensorboardX import SummaryWriter
 
-def display_custom_batch(self,masks, mask_preds, epoch, images = None, unNorm = False, num_images = 4, name = 'Custom'):
+def display_custom_batch(masks, mask_preds, epoch, images = None, unNorm = False, num_images = 4, name = 'Custom'):
         if unNorm and images!=None:
-            images = self.unnorm(images)
+            unorm = UnNormalize()
+            images = unorm(images)
         if images != None:
             image_grid  = torchvision.utils.make_grid(images[:num_images])
             SummaryWriter.add_image(name + '/image',image_grid,epoch)
